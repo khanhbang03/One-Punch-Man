@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hiệp hội Quai Nhân — Ngầu Công Nghệ</title>
+  <style>
+    /* Reset & basics */
+    :root{
+      --bg:#06060a;
+      --neon:#00f6ff;
+      --neon-2:#ffd400;
+      --accent:#8aff6e;
+      --glass: rgba(255,255,255,0.04);
+      --card: rgba(255,255,255,0.03);
+      --text:#e6f7ff;
+      --muted:#9fb3c8;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+
+    /* Matrix canvas fills background */
+    canvas#matrix{
+      position:fixed;inset:0;z-index:0;mix-blend-mode:screen;opacity:0.6;
+    }
+
+    /* Page layout */
+    .wrap{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column}
+    header{display:flex;align-items:center;justify-content:space-between;padding:28px 48px}
+    .brand{display:flex;gap:18px;align-items:center}
+    .logo{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--neon),var(--neon-2));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 30px rgba(0,255,255,0.08);transform:rotate(-8deg)}
+    .logo svg{width:44px;height:44px;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.6))}
+    .site-title{color:var(--text);font-weight:700;letter-spacing:0.6px}
+    .site-sub{color:var(--muted);font-size:13px}
+
+    /* Neon nav */
+    nav{display:flex;gap:18px;align-items:center}
+    nav a{color:var(--muted);text-decoration:none;padding:8px 12px;border-radius:8px}
+    nav a:hover{color:var(--text);box-shadow:0 6px 24px rgba(0,255,255,0.06)}
+
+    /* Hero */
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:36px;padding:56px 48px;align-items:center}
+    .hero-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(6px);padding:28px;border-radius:18px;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+
+    .hero h1{margin:0;color:var(--text);font-size:40px;line-height:1.02;text-shadow:0 6px 28px rgba(0,255,255,0.03)}
+    .neon{color:var(--neon);text-shadow:0 0 10px rgba(0,246,255,0.8),0 0 30px rgba(0,246,255,0.16);}
+    .glow{color:var(--neon-2);text-shadow:0 0 12px rgba(255,212,0,0.6)}
+    p.lead{color:var(--muted);margin-top:10px}
+
+    /* 3D hero silhouette */
+    .silhouette{width:420px;height:420px;border-radius:16px;background:linear-gradient(160deg, rgba(0,0,0,0.45), rgba(255,255,255,0.02));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;transform-style:preserve-3d}
+    .silhouette .card-inner{width:320px;height:320px;border-radius:12px;background:linear-gradient(135deg,rgba(0,0,0,0.45),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:18px;transform:translateZ(40px);}
+    .silhouette svg{width:180px;height:180px;opacity:0.95}
+    .punch-btn{margin-top:10px;padding:10px 14px;border-radius:12px;background:linear-gradient(90deg,var(--neon),var(--neon-2));border:none;color:#001;cursor:pointer;font-weight:700;box-shadow:0 12px 40px rgba(0,200,200,0.08)}
+
+    /* Sections */
+    main{padding:24px 48px 80px}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .card{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .card h3{margin:0 0 8px 0;color:var(--neon)}
+    .muted{color:var(--muted);font-size:14px}
+
+    /* Member card with tilt effect */
+    .member{height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:18px}
+    .avatar{width:96px;height:96px;border-radius:20px;background:linear-gradient(45deg,#00000033, #ffffff08);color:aliceblue;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:800;border:1px solid rgba(255,255,255,0.04)}
+
+    /* Accordion */
+    .accordion button{width:100%;padding:12px;text-align:left;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);color:var(--text);cursor:pointer}
+    .panel{padding:12px 18px;display:none;color:var(--muted)}
+
+    footer{padding:24px 48px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+
+    /* Responsive */
+    @media (max-width:980px){.hero{grid-template-columns:1fr;}.grid{grid-template-columns:1fr 1fr}.silhouette{width:100%;height:360px}.hero-card{order:2}}
+    @media (max-width:640px){.grid{grid-template-columns:1fr}.header{padding:12px}.hero{padding:28px}}
+
+    /* little animations */
+    .flicker{animation:flicker 2.6s linear infinite}
+    @keyframes flicker{0%{opacity:1}50%{opacity:0.82}100%{opacity:1}}
+
+    /* shockwave */
+    .shockwave{position:absolute;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%);left:50%;top:50%;width:20px;height:20px;background:radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(0,246,255,0.12) 40%, rgba(0,0,0,0) 60%);opacity:0}
+    .shockwave.play{animation:shock 700ms ease-out}
+    @keyframes shock{0%{opacity:0.8;transform:translate(-50%,-50%) scale(0.2)}70%{opacity:0.45}100%{opacity:0;transform:translate(-50%,-50%) scale(6)}}
+
+  </style>
+</head>
+<body>
+  <canvas id="matrix"></canvas>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden>
+          <!-- stylized hero symbol (replaceable) -->
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="white" opacity="0.95" />
+          </svg>
+        </div>
+        <div>
+          <div class="site-title">Hiệp hội <span class="neon">Quai Nhân</span></div>
+          <div class="site-sub">Ngầu Công Nghệ · "Sức một cú" inspired</div>
+        </div>
+      </div>
+      <nav>
+        <a href="#about">Giới thiệu</a>
+        <a href="#members">Thành viên</a>
+        <a href="#mission">Sứ mệnh</a>
+        <a href="#join">Tham gia</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h1>Chào mừng tới <span class="neon">Hiệp hội Quai Nhân</span></h1>
+        <p class="lead">Một tổ chức bí ẩn kết hợp công nghệ cao và sức mạnh vượt trội. Chúng tôi tôn vinh kẻ khác biệt — những người có "một cú" thay đổi thế giới.</p>
+        <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+          <button class="punch-btn" id="punchBtn">Kích hoạt: Một Cú</button>
+          <button class="punch-btn" style="background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--muted);">Khám phá</button>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
+          <div class="card" style="min-width:160px">
+            <h3>Hồ sơ</h3>
+            <div class="muted">Tổ chức phi tập trung - tập trung vào nghiên cứu & ổn định thế giới.</div>
+          </div>
+          <div class="card" style="min-width:160px">
+            <h3>Bí ẩn</h3>
+            <div class="muted">Các nhiệm vụ có tính năng huyền bí, công nghệ, và thử nghiệm kéo ngoại lệ.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="silhouette" id="silhouette">
+        <div class="card-inner">
+          <!-- Simple stylized avatar SVG (no copyrighted image) -->
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g1" x1="0" x2="1"><stop offset="0" stop-color="#00f6ff" stop-opacity="0.95"/><stop offset="1" stop-color="#ffd400" stop-opacity="0.95"/></linearGradient>
+            </defs>
+            <circle cx="100" cy="100" r="78" fill="url(#g1)" opacity="0.12"/>
+            <g transform="translate(20,18)">
+              <path d="M60 8 C86 8,98 28,100 46 C102 68,96 76,92 88 C88 100,80 104,62 100 C44 96,28 88,18 74 C8 60,20 8,60 8 Z" fill="#001" opacity="0.85"/>
+              <rect x="40" y="110" width="80" height="8" rx="4" fill="#001" opacity="0.85"/>
+            </g>
+          </svg>
+          <div style="margin-top:12px;color:var(--muted);font-weight:600">Biểu tượng: "Sức Một Cú"</div>
+          <div class="shockwave" id="shock"></div>
+        </div>
+      </div>
+    </section>
+
+    <main>
+      <section id="about" style="margin-bottom:18px">
+        <div class="card" style="padding:18px">
+          <h3>Giới thiệu</h3>
+          <p class="muted">Hiệp hội Quai Nhân gom những cá nhân có năng lực cực độ, hỗ trợ họ cân bằng thế giới bằng cách dùng sức mạnh, công nghệ và tri thức. Chúng tôi làm việc lặng lẽ — nghiên cứu, can thiệp ở điểm cần thiết, và che chở cộng đồng.</p>
+        </div>
+      </section>
+
+      <section id="members" style="margin-bottom:18px">
+        <h2 style="color:var(--neon);margin:6px 0">Thành viên tiêu biểu</h2>
+        <div class="grid">
+          <div class="card member" data-tilt>
+            <div class="avatar">Q1</div>
+            <img src="./Screenshot 2025-10-17 163713.png" alt="Quai Nhân Q1" style="width:300px;height:300px;border-radius:20px;object-fit:cover;border:1px solid rgba(255,255,255,0.04)" />
+            <div style="text-align:center"><strong>Quai Nhân Q1</strong></div>
+            <div class="muted">Chuyên gia xử lý sự cố lượng tử — "Một cú tĩnh lặng"</div>
+          </div>
+          <div class="card member" data-tilt>
+            <div class="avatar">Q2</div>
+            <img src="./Screenshot 2025-10-17 163738.png" alt="Quai Nhân Q2" style="width:300px;height:300px;border-radius:20px;object-fit:cover;border:1px solid rgba(255,255,255,0.04)" />
+            <div style="text-align:center"><strong>Quai Nhân Q2</strong></div>
+            <div class="muted">Nhà lập trình thần kinh — "Một cú phân tích"</div>
+          </div>
+          <div class="card member" data-tilt>
+            <div class="avatar">B</div>
+            <img src="./Screenshot 2025-10-17 163807.png" alt="Quai Nhân B" style="width:300px;height:300px;border-radius:20px;object-fit:cover;border:1px solid rgba(255,255,255,0.04)" />
+            <div style="text-align:center"><strong>Quai Nhân B</strong></div>
+            <div class="muted">Chiến lược gia tác động nhanh — "Một cú thay đổi"</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mission" style="margin-top:18px">
+        <div class="card">
+          <h3>Sứ mệnh</h3>
+          <ol class="muted">
+            <li>Bảo vệ dân thường khỏi sự kiện dị thường.</li>
+            <li>Nghiên cứu và ứng dụng công nghệ tiên phong.</li>
+            <li>Huấn luyện, kiểm soát và tái hoà nhập các cá nhân có năng lực cao.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section style="margin-top:18px;display:grid;grid-template-columns:1fr 360px;gap:18px">
+        <div class="card">
+          <h3>Bí mật</h3>
+          <div class="accordion">
+            <button class="accordion-btn">Căn cứ hoạt động</button>
+            <div class="panel">Vị trí được bảo mật. Chỉ thành viên chính thức mới được biết.</div>
+            <button class="accordion-btn">Thiết bị đặc chủng</button>
+            <div class="panel">Các thiết bị nghiên cứu biến thể, công nghệ bù đắp năng lượng, và drone hỗ trợ.</div>
+            <button class="accordion-btn">Nguyên tắc can thiệp</button>
+            <div class="panel">Can thiệp khi mối nguy vượt khả năng bảo vệ dân thường; ưu tiên giảm thiểu thương tổn.</div>
+          </div>
+        </div>
+
+        <aside class="card" id="join">
+          <h3>Tham gia Hiệp hội</h3>
+          <p class="muted">Bạn có kỹ năng đặc biệt, kiến thức công nghệ, hoặc sẵn sàng hỗ trợ hậu cần? Điền mẫu để liên hệ.</p>
+          <form id="joinForm" style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+            <input name="name" placeholder="Họ tên" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)" required />
+            <input name="email" placeholder="Email" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)" required />
+            <textarea name="about" placeholder="Tóm tắt kỹ năng / lý do" rows="4" style="padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--text)"></textarea>
+            <button style="padding:10px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--neon),var(--neon-2));font-weight:700;cursor:pointer">Gửi</button>
+          </form>
+        </aside>
+      </section>
+    </main>
+
+    <footer>
+      <div>© Hiệp hội Quai Nhân — Bản demo</div>
+      <div class="muted">Thiết kế: Ngầu Công Nghệ · Gợi ý: thay SVG bằng ảnh của nhân vật nếu muốn</div>
+    </footer>
+  </div>
+
+  <script>
+    // MATRIX BACKGROUND
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    function resize(){canvas.width = innerWidth; canvas.height = innerHeight}
+    window.addEventListener('resize', resize); resize();
+    const cols = Math.floor(canvas.width / 14);
+    const ypos = Array(cols).fill(0);
+    const letters = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWX'.split('');
+    function matrixStep(){
+      ctx.fillStyle = 'rgba(0,0,0,0.07)';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.font = '13px monospace';
+      for(let i=0;i<ypos.length;i++){
+        const text = letters[Math.floor(Math.random()*letters.length)];
+        const x = i*14; const y = ypos[i]*14;
+        ctx.fillStyle = 'rgba(0,255,200,0.14)';
+        ctx.fillText(text,x,y);
+        ypos[i] = y>canvas.height+Math.random()*1000?0:y/14+1;
+      }
+      requestAnimationFrame(matrixStep);
+    }
+    matrixStep();
+
+    // TILT effect for member cards
+    document.querySelectorAll('[data-tilt]').forEach(el=>{
+      el.addEventListener('mousemove',e=>{
+        const rect = el.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        el.style.transform = `perspective(800px) rotateX(${ -y*8 }deg) rotateY(${ x*8 }deg)`;
+        el.style.transition = 'transform 0.08s';
+      });
+      el.addEventListener('mouseleave',()=>{el.style.transform='perspective(800px) rotateX(0) rotateY(0)'; el.style.transition='transform 0.4s';});
+    });
+
+    // Accordion
+    document.querySelectorAll('.accordion-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const panel = btn.nextElementSibling;
+        const open = panel.style.display === 'block';
+        document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
+        if(!open) panel.style.display='block';
+      });
+    });
+
+    // Punch shockwave
+    const punchBtn = document.getElementById('punchBtn');
+    const shock = document.getElementById('shock');
+    punchBtn.addEventListener('click',()=>{
+      shock.classList.remove('play');
+      void shock.offsetWidth; // reflow
+      shock.classList.add('play');
+      // quick visual pulse on header logo
+      const logo = document.querySelector('.logo');
+      logo.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:520});
+      // small screen flash
+      document.body.animate([{boxShadow:'0 0 0px rgba(0,255,255,0)'},{boxShadow:'0 0 120px rgba(0,255,255,0.06)'},{boxShadow:'0 0 0 rgba(0,255,255,0)'}],{duration:700});
+    });
+
+    // Join form handler (demo)
+    document.getElementById('joinForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const name = e.target.name.value || '---';
+      alert(`Cảm ơn ${name}! Mẫu đã được gửi (demo).`);
+      e.target.reset();
+    });
+
+    // gentle floating on silhouette for 3D feeling
+    const sil = document.getElementById('silhouette');
+    let t=0;setInterval(()=>{t+=0.01; sil.style.transform = `translateZ(0) rotateY(${Math.sin(t)*6}deg) rotateX(${Math.cos(t)*2}deg)`},30);
+  </script>
+</body>
+</html>
